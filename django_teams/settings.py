@@ -27,6 +27,7 @@ TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
 
+INTERNAL_IPS = ['10::','::2', '10.0.2.2']
 
 # Application definition
 
@@ -40,9 +41,11 @@ INSTALLED_APPS = (
     'django_teams',
 
     'bootstrap3',
+    'debug_toolbar'
 )
 
 MIDDLEWARE_CLASSES = (
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

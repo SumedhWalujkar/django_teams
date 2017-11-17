@@ -6,8 +6,9 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
+from django.db.models import Q, Count
 
-from django_teams.models import Team, TeamStatus
+from django_teams.models import Team, TeamStatus, Ownership
 from django_teams.forms import (TeamEditForm,
                                 TeamStatusCreateForm,
                                 action_formset)
@@ -15,6 +16,11 @@ from django_teams.forms import (TeamEditForm,
 
 class TeamListView(ListView):
     model = Team
+
+    def get_queryset(self):
+        queryset = Team.objects.all().annotate(member_count=Count('users'))
+        queryset = queryset.annotate(status=get_user_status(self.request.user))
+        return queryset
 
 
 class UserTeamListView(ListView):
@@ -49,10 +55,16 @@ class TeamDetailView(DetailView):
 
     def get_object(self, queryset=None):
         object = super(TeamDetailView, self).get_object(queryset)
-
         if object.private and self.request.user not in object.users.filter(teamstatus__role__gte=10):
             raise PermissionDenied()
         return object
+
+    def render_to_response(self, context, **response_kwargs):
+        team = self.object
+        context['owners'] = team.users.filter(teamstatus__role=20)
+        context['members'] = team.users.filter(teamstatus__role=10)
+        context['approved_objects']  = Ownership.objects.filter(team=team, approved=True).order_by('-content_type').prefetch_related('content_object')
+        return super(TeamDetailView, self).render_to_response(context, **response_kwargs)
 
 
 class TeamInfoEditView(UpdateView):
@@ -86,11 +98,13 @@ class TeamEditView(UpdateView):
     def get_form_class(self):
         # get forms for team leaders, team members, team requests
         ret = []
-        ret += [action_formset(self.object.owners(), ('---', 'Demote', 'Remove'))]
-        ret += [action_formset(self.object.members(), ('---', 'Promote', 'Remove'))]
-        ret += [action_formset(self.object.requests(), ('---', 'Approve', 'Reject'))]
-        ret += [action_formset(self.object.approved_objects(), ('---', 'Remove'), link=True)]
-        ret += [action_formset(self.object.unapproved_objects(), ('---', 'Approve', 'Reject'), link=True)]
+        team = self.object
+        ret += [action_formset(team.users.filter(teamstatus__role=20), ('---', 'Demote', 'Remove'))]
+        ret += [action_formset(team.users.filter(teamstatus__role=10), ('---', 'Promote', 'Remove'))]
+        ret += [action_formset(team.users.filter(teamstatus__role=1), ('---', 'Approve', 'Reject'))]
+        owned_objects  = Ownership.objects.filter(team=team).order_by('-content_type').prefetch_related('content_object')
+        ret += [action_formset(owned_objects.filter(approved=True), ('---', 'Remove'), link=True)]
+        ret += [action_formset(owned_objects.filter(approved=False), ('---', 'Approve', 'Reject'), link=True)]
         return ret
 
     def get_form(self, form_class=TeamEditForm):

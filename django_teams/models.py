@@ -29,60 +29,8 @@ class Team(models.Model):
     def add_user(self, user, team_role=1):
         TeamStatus(user=user, team=self, role=team_role).save()
 
-    def owners(self):
-        return self.users.filter(teamstatus__role=20)
-
-    def members(self):
-        return self.users.filter(teamstatus__role=10)
-
-    def requests(self):
-        return TeamStatus.objects.filter(team=self, role=1)
-
-    def owned_objects(self, model):
-        # Maybe not the best way
-        contenttype = ContentType.objects.get_for_model(model)
-        ret = []
-
-        # I'm pretty sure there's a django one liner for this but I don't feel like looking right now
-        # Someone might want to do that in the future
-        for ownership in Ownership.objects.filter(team=self, content_type=contenttype):
-            ret += [ownership.content_object]
-
-        return ret
-
-    def unapproved_objects(self):
-        return Ownership.objects.filter(team=self, approved=False)
-
-    def approved_objects(self):
-        return Ownership.objects.filter(team=self, approved=True)
-
-    def approved_objects_of_model(self, model):
-        # Maybe not the best way
-        contenttype = ContentType.objects.get_for_model(model)
-        ret = []
-
-        # I'm pretty sure there's a django one liner for this but I don't feel like looking right now
-        # Someone might want to do that in the future
-        for ownership in Ownership.objects.filter(team=self, content_type=contenttype, approved=True):
-            ret += [ownership.content_object]
-
-        return ret
-
-    def owned_object_types(self):
-        ret = []
-        for ownership in Ownership.objects.filter(team=self):
-            if ownership.content_type.model_class() not in ret:
-                ret += [ownership.content_type.model_class()]
-        return ret
-
-    def member_count(self):
-        return self.users.all().count()
-
     def get_user_status(self, user):
-        s = TeamStatus.objects.filter(user=user, team=self)
-        if len(s) >= 1:
-            return s[0]
-        return None
+        return TeamStatus.objects.filter(user=user, team=self).first()
 
     def approve_user(self, user):
         ts = TeamStatus.objects.get(user=user, team=self)

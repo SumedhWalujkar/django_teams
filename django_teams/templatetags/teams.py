@@ -1,10 +1,11 @@
 from django import template
 from django.contrib.contenttypes.models import ContentType
+from django_teams.models import TeamStatus
 
 
 def get_user_status(team, user):
-    ts = team.get_user_status(user)
-    return ts
+    print team.users.all()
+    return team.users.filter(id=user.id).first()
 
 
 def get_owned_objects(team, model):
