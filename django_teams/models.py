@@ -29,9 +29,6 @@ class Team(models.Model):
     def add_user(self, user, team_role=1):
         TeamStatus(user=user, team=self, role=team_role).save()
 
-    def get_user_status(self, user):
-        return TeamStatus.objects.filter(user=user, team=self).first()
-
     def approve_user(self, user):
         ts = TeamStatus.objects.get(user=user, team=self)
         if ts.role == 1:

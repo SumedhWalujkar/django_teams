@@ -13,13 +13,19 @@ from django_teams.forms import (TeamEditForm,
                                 TeamStatusCreateForm,
                                 action_formset)
 
+from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.db.models import Case, When, Value
+from django.db import models
+from django.conf import settings
 
 class TeamListView(ListView):
     model = Team
 
     def get_queryset(self):
         queryset = Team.objects.all().annotate(member_count=Count('users'))
-        queryset = queryset.annotate(status=get_user_status(self.request.user))
+        queryset = queryset.annotate(role=Case(When(teamstatus__user=self.request.user,then='teamstatus__role'),default=0,outputfield=models.IntegerField()))
+        queryset = queryset.annotate(owner=Case(When(teamstatus__role=20,then='users__username'), default=None, ))
+        queryset = queryset.order_by('-role')
         return queryset
 
 
