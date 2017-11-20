@@ -26,6 +26,7 @@ class TeamListView(ListView):
         queryset = queryset.annotate(role=Case(When(teamstatus__user=self.request.user,then='teamstatus__role'),default=0,outputfield=models.IntegerField()))
         queryset = queryset.annotate(owner=Case(When(teamstatus__role=20,then='users__username'), default=None, ))
         queryset = queryset.order_by('-role')
+        print queryset.all()
         return queryset
 
 
