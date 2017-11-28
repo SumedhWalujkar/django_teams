@@ -6,25 +6,23 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, Count
+from django.db.models import Count
 
 from django_teams.models import Team, TeamStatus, Ownership
 from django_teams.forms import (TeamEditForm,
                                 TeamStatusCreateForm,
                                 action_formset)
 
-from django.contrib.postgres.aggregates.general import ArrayAgg
-from django.db.models import Case, When, Value
+from django.db.models import Case, When
 from django.db import models
-from django.conf import settings
 
 class TeamListView(ListView):
     model = Team
 
     def get_queryset(self):
         queryset = Team.objects.all().annotate(member_count=Count('users'))
-        queryset = queryset.annotate(role=Case(When(teamstatus__user=self.request.user,then='teamstatus__role'),default=0,outputfield=models.IntegerField()))
-        queryset = queryset.annotate(owner=Case(When(teamstatus__role=20,then='users__username'), default=None, ))
+        queryset = queryset.annotate(role=Case(When(teamstatus__user=self.request.user, then='teamstatus__role'), default=0, outputfield=models.IntegerField()))
+        queryset = queryset.annotate(owner=Case(When(teamstatus__role=20, then='users__username'), default=None))
         queryset = queryset.order_by('-role')
         print queryset.all()
         return queryset
@@ -70,9 +68,8 @@ class TeamDetailView(DetailView):
         team = self.object
         context['owners'] = team.users.filter(teamstatus__role=20)
         context['members'] = team.users.filter(teamstatus__role=10)
-        context['approved_objects']  = Ownership.objects.filter(team=team, approved=True).order_by('-content_type').prefetch_related('content_object')
+        context['approved_objects']  = Ownership.objects.filter(team=team, approved=True).order_by('-content_type').prefetch_related('content_object').prefetch_related('content_object__screenshot')
         return super(TeamDetailView, self).render_to_response(context, **response_kwargs)
-
 
 class TeamInfoEditView(UpdateView):
     model = Team
@@ -105,11 +102,11 @@ class TeamEditView(UpdateView):
     def get_form_class(self):
         # get forms for team leaders, team members, team requests
         ret = []
-        team = self.object
-        ret += [action_formset(team.users.filter(teamstatus__role=20), ('---', 'Demote', 'Remove'))]
-        ret += [action_formset(team.users.filter(teamstatus__role=10), ('---', 'Promote', 'Remove'))]
-        ret += [action_formset(team.users.filter(teamstatus__role=1), ('---', 'Approve', 'Reject'))]
-        owned_objects  = Ownership.objects.filter(team=team).order_by('-content_type').prefetch_related('content_object')
+        users = self.object.users
+        ret += [action_formset(users.filter(teamstatus__role=20), ('---', 'Demote', 'Remove'))]
+        ret += [action_formset(users.filter(teamstatus__role=10), ('---', 'Promote', 'Remove'))]
+        ret += [action_formset(users.filter(teamstatus__role=1), ('---', 'Approve', 'Reject'))]
+        owned_objects  = Ownership.objects.filter(team=self.object).order_by('-content_type').prefetch_related('content_object')
         ret += [action_formset(owned_objects.filter(approved=True), ('---', 'Remove'), link=True)]
         ret += [action_formset(owned_objects.filter(approved=False), ('---', 'Approve', 'Reject'), link=True)]
         return ret
