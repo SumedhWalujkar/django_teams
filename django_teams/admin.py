@@ -37,6 +37,7 @@ class OwnershipAdmin(admin.ModelAdmin):
             return obj.content_object.owner
         return 'n/a'
 
+
 # ie,
 # admin.site.register(User, UserAdmin)
 admin.site.register(Team, TeamAdmin)
