@@ -7,6 +7,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
+from django.contrib.contenttypes.models import ContentType
 
 from django_teams.models import Team, TeamStatus, Ownership
 from django_teams.forms import (TeamEditForm,
@@ -15,6 +16,19 @@ from django_teams.forms import (TeamEditForm,
 
 from django.db.models import Case, When
 from django.db import models
+
+
+def loadGenericKeyRelations(queryset):
+    content_types = queryset.distinct('content_type').only('content_type')
+    object_items = {}
+    for content_type in content_types:
+        print content_type
+        objects = content_type.model_class().filter(queryset.filter(content_type=content_type))
+        for relation in content_type.model_class()._meta.get_fields():
+            objects.select_related(relation)
+        object_items.add(objects)
+    return object_items
+
 
 class TeamListView(ListView):
     model = Team
@@ -68,8 +82,10 @@ class TeamDetailView(DetailView):
         team = self.object
         context['owners'] = team.users.filter(teamstatus__role=20)
         context['members'] = team.users.filter(teamstatus__role=10)
-        context['approved_objects']  = Ownership.objects.filter(team=team, approved=True).order_by('-content_type').prefetch_related('content_object').prefetch_related('content_object__screenshot')
+        owned = Ownership.objects.filter(team=team, approved=True)
+        context['approved_objects']  = loadGenericKeyRelations(owned)
         return super(TeamDetailView, self).render_to_response(context, **response_kwargs)
+
 
 class TeamInfoEditView(UpdateView):
     model = Team
