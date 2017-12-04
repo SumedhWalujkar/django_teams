@@ -23,13 +23,13 @@ def read_requirements(fname):
 
 setup(
     zip_safe=False,
-    name="django_teams",
-    version="1.1.1",
-    author="Charles H",
-    author_email="chathaway@logrit.com",
+    name="django_teams_community",
+    version="1.1.2",
+    author="Charles H - edits by Silly Inventor",
+    author_email="SillyInventor@gmail.com",
     description="This package provides a framework for organizing groups of" +
     "users and restricting access in other views and models",
-    keywords="",
+    keywords="team, community",
     packages=find_packages(),
     long_description=read('README.md'),
     install_requires=read_requirements('requirements.txt'),
