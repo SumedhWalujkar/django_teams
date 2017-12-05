@@ -4,7 +4,6 @@ from django_teams.models import TeamStatus
 
 
 def get_user_status(team, user):
-    print team.users.all()
     return team.users.filter(id=user.id).first()
 
 

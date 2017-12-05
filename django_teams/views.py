@@ -24,7 +24,6 @@ def loadGenericKeyRelations(queryset):
     for object in distinct_contents:
         content_type = object.content_type.model_class()
         set = queryset.filter(content_type=object.content_type).values()
-        print queryset.filter(content_type=object.content_type)
         objects = content_type.objects.filter(pk__in=[object['object_id'] for object in set])
         for relation in content_type._meta.get_fields():
             objects.prefetch_related(relation)
@@ -88,7 +87,6 @@ class TeamDetailView(DetailView):
         context['members'] = team.users.filter(teamstatus__role=10)
         owned = Ownership.objects.filter(team=team, approved=True)
         context['approved_objects_types']  = loadGenericKeyRelations(owned)
-        print context['approved_objects_types']
         return super(TeamDetailView, self).render_to_response(context, **response_kwargs)
 
 
