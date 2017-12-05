@@ -26,7 +26,8 @@ def loadGenericKeyRelations(queryset):
         set = queryset.filter(content_type=object.content_type).values()
         objects = content_type.objects.filter(pk__in=[object['object_id'] for object in set])
         for relation in content_type._meta.get_fields():
-            objects.prefetch_related(relation)
+            if relation.get_internal_type() is 'ForeignKey':
+                objects.select_related(relation.name)
         object_items.append(objects.all())
     return object_items
 
