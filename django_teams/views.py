@@ -19,14 +19,16 @@ from django.db import models
 
 
 def loadGenericKeyRelations(queryset):
-    content_types = queryset.distinct('content_type').only('content_type')
-    object_items = {}
-    for content_type in content_types:
-        print content_type
-        objects = content_type.model_class().filter(queryset.filter(content_type=content_type))
-        for relation in content_type.model_class()._meta.get_fields():
-            objects.select_related(relation)
-        object_items.add(objects)
+    distinct_contents = queryset.distinct('content_type').only('content_type')
+    object_items = []
+    for object in distinct_contents:
+        content_type = object.content_type.model_class()
+        set = queryset.filter(content_type=object.content_type).values()
+        print queryset.filter(content_type=object.content_type)
+        objects = content_type.objects.filter(pk__in=[object['object_id'] for object in set])
+        for relation in content_type._meta.get_fields():
+            objects.prefetch_related(relation)
+        object_items.append(objects.all())
     return object_items
 
 
@@ -35,10 +37,12 @@ class TeamListView(ListView):
 
     def get_queryset(self):
         queryset = Team.objects.all().annotate(member_count=Count('users'))
-        queryset = queryset.annotate(role=Case(When(teamstatus__user=self.request.user, then='teamstatus__role'), default=0, outputfield=models.IntegerField()))
         queryset = queryset.annotate(owner=Case(When(teamstatus__role=20, then='users__username'), default=None))
-        queryset = queryset.order_by('-role')
-        print queryset.all()
+        if not self.request.user.is_anonymous():
+            queryset = queryset.annotate(role=Case(When(teamstatus__user=self.request.user, then='teamstatus__role'), default=0, outputfield=models.IntegerField()))
+            queryset = queryset.order_by('-role')
+        else:
+            queryset = queryset.order_by('-id')
         return queryset
 
 
@@ -83,7 +87,8 @@ class TeamDetailView(DetailView):
         context['owners'] = team.users.filter(teamstatus__role=20)
         context['members'] = team.users.filter(teamstatus__role=10)
         owned = Ownership.objects.filter(team=team, approved=True)
-        context['approved_objects']  = loadGenericKeyRelations(owned)
+        context['approved_objects_types']  = loadGenericKeyRelations(owned)
+        print context['approved_objects_types']
         return super(TeamDetailView, self).render_to_response(context, **response_kwargs)
 
 
@@ -119,12 +124,20 @@ class TeamEditView(UpdateView):
         # get forms for team leaders, team members, team requests
         ret = []
         users = self.object.users
-        ret += [action_formset(users.filter(teamstatus__role=20), ('---', 'Demote', 'Remove'))]
-        ret += [action_formset(users.filter(teamstatus__role=10), ('---', 'Promote', 'Remove'))]
-        ret += [action_formset(users.filter(teamstatus__role=1), ('---', 'Approve', 'Reject'))]
-        owned_objects  = Ownership.objects.filter(team=self.object).order_by('-content_type').prefetch_related('content_object')
-        ret += [action_formset(owned_objects.filter(approved=True), ('---', 'Remove'), link=True)]
-        ret += [action_formset(owned_objects.filter(approved=False), ('---', 'Approve', 'Reject'), link=True)]
+        ret += [action_formset(prefix_name='teachers', qset=users.filter(teamstatus__role=20), actions=('---', 'Demote', 'Remove'))]
+        ret += [action_formset(prefix_name='students', qset=users.filter(teamstatus__role=10), actions=('---', 'Promote', 'Remove'))]
+        ret += [action_formset(prefix_name='member-requests', qset=users.filter(teamstatus__role=1), actions=('---', 'Approve', 'Reject'))]
+        owned_objects  = Ownership.objects.filter(team=self.object)
+        approved = loadGenericKeyRelations(owned_objects.filter(approved=True))
+        for set in approved:
+            if set:
+                prefix_name = 'approved-' + str(set.model.__name__)
+                ret += [action_formset(prefix_name=prefix_name, qset=set, actions=('---', 'Remove'), link=True)]
+        pending_approval = loadGenericKeyRelations(owned_objects.filter(approved=False))
+        for set in pending_approval:
+            if set:
+                prefix_name = str(set.model.__name__) + 's-pending-approval'
+                ret += [action_formset(prefix_name=prefix_name, qset=set, actions=('---', 'Approve', 'Remove'), link=True)]
         return ret
 
     def get_form(self, form_class=TeamEditForm):
@@ -132,17 +145,10 @@ class TeamEditView(UpdateView):
         form_class = self.get_form_class()
 
         if 'data' in kwargs:
-            ret = [form_class[0](kwargs['data'], prefix='teachers'),
-                   form_class[1](kwargs['data'], prefix='students'),
-                   form_class[2](kwargs['data'], prefix='member-requests'),
-                   form_class[3](kwargs['data'], prefix='approved-objects'),
-                   form_class[4](kwargs['data'], prefix='approval-requests')]
+            ret = [form_class[num](kwargs['data'],
+                                    prefix=form_class[num].name) for num in range(len(form_class))]
         else:
-            ret = [form_class[0](prefix='teachers'),
-                   form_class[1](prefix='students'),
-                   form_class[2](prefix='member-requests'),
-                   form_class[3](prefix='approved-objects'),
-                   form_class[4](prefix='approval-requests')]
+            ret = [form_class[num](prefix=form_class[num].name) for num in range(len(form_class))]
 
         return ret
 
@@ -195,21 +201,17 @@ class TeamEditView(UpdateView):
             for i in request_items:
                 i.delete()
 
-        current_action = form[3].cleaned_data['action']
-        current_items = form[3].cleaned_data['items']
-        if current_action == 'Remove':
-            for i in current_items:
-                i.delete()
+        for num in range(3,len(form)):
 
-        object_action = form[4].cleaned_data['action']
-        object_items = form[4].cleaned_data['items']
-        if object_action == 'Approve':
-            for i in object_items:
-                i.approved = True
-                i.save()
-        if object_action == 'Reject':
-            for i in object_items:
-                i.delete()
+            current_action = form[num].cleaned_data['action']
+            current_items = form[num].cleaned_data['items']
+            if current_action == 'Approve':
+                for i in current_items:
+                    i.approved = True
+                    i.save()
+            if current_action == 'Remove':
+                for i in current_items:
+                    i.delete()
 
         return HttpResponseRedirect(self.get_success_url())
 

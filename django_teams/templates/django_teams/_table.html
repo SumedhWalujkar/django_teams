@@ -2,7 +2,7 @@
 <tr>
     <td>
       <a href="{% url 'team-detail' pk=object.id %}">{{ object }}</a>
-      {% if user.is_authenticated %}
+      {% if not user.is_anonymous %}
           {% if object.role == 20 %}
               (<a href="{% url 'team-edit' pk=object.pk %}">Admin</a>)
           {% endif %}
@@ -14,7 +14,7 @@
     </td>
     <td>{{ object.member_count }}</td>
     <td>
-        {% if user.is_authenticated %}
+    {% if not user.is_anonymous %}
                 {% if object.role == 0 %}
                     <a href="{% url 'teamstatus-create' team_pk=object.pk %}">Join</a>
                 {% elif object.role == 1 %}
