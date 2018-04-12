@@ -187,4 +187,3 @@ class AdminTests(TestCase):
                 self.assertContains(response, str(teamstatus))
                 self.assertContains(response, '/admin/django_teams/teamstatus/%d/change' % teamstatus.pk)
         self.client.logout()
-        
