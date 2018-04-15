@@ -9,6 +9,7 @@ try:
 except:  # noqa: E722
     pass
 
+
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
 
