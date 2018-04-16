@@ -24,7 +24,7 @@ def read_requirements(fname):
 setup(
     zip_safe=False,
     name="django_teams_community",
-    version="1.4.1",
+    version="1.4.2",
     author="Currently Silly Inventor, formally Charles H",
     author_email="SillyInventor@gmail.com",
     description="This package provides a framework for organizing groups of" +
