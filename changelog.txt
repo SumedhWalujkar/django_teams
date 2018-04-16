@@ -1,6 +1,17 @@
 # django_teams changelog
 
-## 1.4.1
+## 1.4.3
+
+04/16/2018
+
+### Changes
+Fixing the vagrant file
+Fixing ordering
+Adding testing
+Fixing detail and edit object xs width
+Fixing select to use check boxes
+
+## 1.4.2
 
 04/13/2018
 
