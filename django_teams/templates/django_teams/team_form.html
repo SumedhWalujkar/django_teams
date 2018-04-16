@@ -55,7 +55,7 @@
             </div>
             <div class="user-list row">
                 {% for object in group.queryset %}
-                    <div class="col-sm-6 col-md-2">
+                    <div class="col-xs-6 col-sm-4 col-md-2">
                     <a class="thumbnail" onclick="toggleSelected('{{ group.items.id_for_label }}', '{{ object.id }}')" id="{{ group.items.id_for_label }}_{{ object.id }}">{% include object|load_fragment_template %}</a>
                     </div>
                 {% endfor %}
