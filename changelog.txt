@@ -1,4 +1,10 @@
 # django_teams changelog
+## 1.4.4
+
+04/17/2018
+
+### Changes
+Forgot the form tag
 
 ## 1.4.3
 
