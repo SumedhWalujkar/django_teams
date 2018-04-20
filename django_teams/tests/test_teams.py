@@ -110,3 +110,16 @@ class TeamTests(TestCase):
                 owned_object_types += [ownership.content_type.model_class()]
 
         self.assertIn(User, owned_object_types)
+
+
+class TeamStatusTests(TestCase):
+    fixtures = ['test_data.json']
+
+    def test_can_approve_user(self):
+        team = Team(name="Team Alpha")
+        team.save()
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        ts = TeamStatus(team=team, user=self.user, role=1)
+        ts.save()
+        ts.approve()
+        self.assertEqual(ts.role, 10)

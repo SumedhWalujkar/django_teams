@@ -38,6 +38,14 @@ class ListTeamsTests(TestCase):
         for team in Team.objects.all():
             self.assertContains(response, reverse('team-detail', kwargs={'pk': team.pk}))
 
+    def test_team_list_not_anonymous(self):
+        self.client.login(username='test', password='test')
+        response = self.client.get(reverse('team-list'))
+        for team in Team.objects.all():
+            self.assertContains(response, str(team))
+            self.assertContains(response, reverse('team-detail', kwargs={'pk': team.pk}))
+        self.client.logout()
+
 
 class DetailTeamsTests(TestCase):
     fixtures = ['test_data.json']

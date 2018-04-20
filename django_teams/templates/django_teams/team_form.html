@@ -22,7 +22,6 @@
     <script>
         var toggleSelected = function(selectId, objectId) {
             var selectObject = $('#'+selectId+'_'+objectId);
-            selectObject.toggleClass('active');
             var values = $("#"+selectId).val();
             if(values == null || values == "")
                 values = [];
@@ -40,7 +39,7 @@
 {% block content %}
 
     <form class="form-horizontal" method="post" action="{% url 'team-edit' pk=object.pk %}">
-
+    
     {% for group in form %}
     <div class="panel panel-default">
         <div class="panel-heading">
@@ -55,8 +54,8 @@
             </div>
             <div class="user-list row">
                 {% for object in group.queryset %}
-                    <div class="col-sm-6 col-md-2">
-                    <a class="thumbnail" onclick="toggleSelected('{{ group.items.id_for_label }}', '{{ object.id }}')" id="{{ group.items.id_for_label }}_{{ object.id }}">{% include object|load_fragment_template %}</a>
+                    <div class="col-xs-6 col-sm-4 col-md-2">
+                      <input type="checkbox"  style="width:30px; height:30px" id="{{ group.items.id_for_label }}_{{ object.id }}" name="{{ object.id }}" value="newsletter" onclick="toggleSelected('{{ group.items.id_for_label }}', '{{ object.id }}')">{% include object|load_fragment_template %}
                     </div>
                 {% endfor %}
                 {{ group.items }}
