@@ -114,7 +114,7 @@ class TeamTests(TestCase):
     def test_can_get_absolute_url(self):
         team = Team(name="Team Awesome")
         team.save()
-        self.assertEqual(team.get_absolute_url(), '/teams/%d/' %team.pk)
+        self.assertEqual(team.get_absolute_url(), '/teams/%d/' % team.pk)
 
     def test_can_get_approved_objects(self):
         team = Team(name="Team Awesome")
@@ -129,6 +129,7 @@ class TeamTests(TestCase):
         self.assertIn(ownership1, approved_objects)
         self.assertIn(ownership2, approved_objects)
         self.assertNotIn(ownership3, approved_objects)
+
 
 class TeamStatusTests(TestCase):
     fixtures = ['test_data.json']
