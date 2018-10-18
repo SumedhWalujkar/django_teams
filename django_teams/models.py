@@ -12,7 +12,6 @@ CurrentTeam = None
 
 class Team(models.Model):
     users = models.ManyToManyField(settings.AUTH_USER_MODEL,
-                                   null=True,
                                    blank=True,
                                    through='django_teams.TeamStatus',
                                    related_name='team_member')
