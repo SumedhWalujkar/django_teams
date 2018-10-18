@@ -195,3 +195,17 @@ class AdminTests(TestCase):
                 self.assertContains(response, str(teamstatus))
                 self.assertContains(response, '/admin/django_teams/teamstatus/%d/change' % teamstatus.pk)
         self.client.logout()
+
+
+class CreateTeamStatusView(TestCase):
+    fixtures = ['test_data.json']
+
+    def test_display_post(self):
+        user = User.objects.create(username='user1', password='12345')
+        user.save()
+        team = Team(name='team10')
+        team.save()
+        ts = TeamStatus.objects.create(team=team, user=user, role=20)
+        response = self.client.get(reverse('team-list'))
+        self.assertContains(response, str(ts.team))
+        self.assertContains(response, str(ts.user))
