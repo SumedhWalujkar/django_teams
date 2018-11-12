@@ -27,8 +27,8 @@ setup(
     version="1.4.5",
     author="Currently Silly Inventor, formally Charles H",
     author_email="SillyInventor@gmail.com",
-    description="This package provides a framework for organizing groups of" +
-    "users and restricting access in other views and models",
+    description="This package provides a framework for organizing groups of \
+    users and restricting access in other views and models",
     keywords="",
     packages=find_packages(),
     long_description=read('README.md'),
