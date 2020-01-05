@@ -22,7 +22,7 @@ class Team(models.Model):
     def get_absolute_url(self):
         return reverse('team-detail', kwargs={'pk': self.pk})
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def add_user(self, user, team_role=1):
@@ -61,7 +61,7 @@ class TeamStatus(models.Model):
         self.role = 10
         self.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s requesting to join %s" % (self.user.__unicode__(), self.team.__unicode__())
 
 
