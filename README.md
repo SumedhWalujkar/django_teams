@@ -6,4 +6,4 @@ django\_teams
 This project aims to provide an easy-to-use method for restricting row-based access to models based on "teams".
 Teams control objects, and can specify who is allowed to read, create, update, and delete objects.
 
-This repository originally written by chuck211991, modified for rpi_csdt_community.
+This repository originally written by chuck211991, modified for rpi_csdt_community and reused for csdt.org.

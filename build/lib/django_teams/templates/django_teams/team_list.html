@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load teams %}
+
+{% block page-header %}
+{% endblock %}
+
+{% block content %}
+<div class="row" align="left">
+    {% if user.is_authenticated %}
+        <h4><a href="{% url 'team-create' %}">Create your own</a></h4>
+    {% endif %}
+    <p>
+        <strong>Video Tutorials:</strong>
+        <br>
+        <a href="https://vimeo.com/245028587">Classroom Creation</a> (<a href="/classrooms_guide/">Text-Only Guide</a>)<br>
+        <a href="https://vimeo.com/245421557">Classroom Administration</a><br>
+        <a href="https://vimeo.com/245421728">How Students Will Use Classrooms</a>
+    </p>
+</div>
+
+
+
+<div class="row">
+    <h2>Classrooms: </h2>
+</div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Classroom Name</th>
+                <th>Classroom Description</th>
+                <th>Classroom Owners</th>
+                <th># of members</th>
+                <th>Your status</th>
+            </tr>
+        </thead>
+        {% for team in list %}
+              {% include "django_teams/_table.html" %}
+            
+        {% endfor %}
+    </table>
+{% endblock %}
