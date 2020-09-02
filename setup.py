@@ -23,8 +23,8 @@ def read_requirements(fname):
 
 setup(
     zip_safe=False,
-    name="djangoteams-community",
-    version="1.4.8",
+    name="djangoteams_community",
+    version="1.4.9",
     author="Sumedh Walujkar",
     author_email="sumedh@umich.edu",
     description="This package provides a framework for organizing groups of \

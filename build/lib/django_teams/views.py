@@ -36,7 +36,7 @@ class TeamListView(ListView):
     def render_to_response(self, context, **response_kwargs):
         queryset = Team.objects.all().annotate(member_count=Count('users'))
         queryset = queryset.annotate(owner=Case(When(teamstatus__role=20, then=F('users__username')), default=None))
-        if not self.request.user.is_anonymous():
+        if not self.request.user.is_anonymous:
             queryset = queryset.annotate(role=Case(When(teamstatus__user=self.request.user,
                                          then=F('teamstatus__role')), default=0, outputfield=models.IntegerField()))
             queryset = queryset.order_by('-role', 'name')
